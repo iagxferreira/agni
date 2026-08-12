@@ -9,13 +9,7 @@ use tracing::{error, warn};
 use agni::protocol::{Command, Response};
 use agni::store::Store;
 
-pub async fn handle(
-    socket: TcpStream,
-    store: Store,
-    host: String,
-    port: u16,
-    started_at: Instant,
-) {
+pub async fn handle(socket: TcpStream, store: Store, host: String, port: u16, started_at: Instant) {
     let (reader, writer) = socket.into_split();
     let mut framed_read = FramedRead::new(reader, LengthDelimitedCodec::new());
     let mut framed_write = FramedWrite::new(writer, LengthDelimitedCodec::new());

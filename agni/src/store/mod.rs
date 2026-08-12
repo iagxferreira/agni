@@ -2,8 +2,8 @@ mod entry;
 
 pub use entry::Entry;
 
-use std::sync::Arc;
 use dashmap::DashMap;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct Store {
@@ -31,6 +31,12 @@ impl Store {
 
     pub fn get_as_json(&self, key: &str) -> Option<Result<String, serde_json::Error>> {
         self.data.get(key).map(|e| e.to_json())
+    }
+}
+
+impl Default for Store {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

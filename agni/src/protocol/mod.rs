@@ -17,7 +17,9 @@ impl Command {
             "PING" => Command::Ping,
             "HEALTHCHECK" => Command::Healthcheck,
             "GET" => match parts.next() {
-                Some(key) => Command::Get { key: key.trim().to_string() },
+                Some(key) => Command::Get {
+                    key: key.trim().to_string(),
+                },
                 None => Command::Unknown("GET requires a key".to_string()),
             },
             "SET" => match (parts.next(), parts.next()) {

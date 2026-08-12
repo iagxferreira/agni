@@ -39,8 +39,8 @@ impl BenchResult {
 
     fn percentile(&mut self, p: f64) -> Duration {
         self.latencies.sort();
-        let idx = ((self.latencies.len() as f64 * p / 100.0) as usize)
-            .min(self.latencies.len() - 1);
+        let idx =
+            ((self.latencies.len() as f64 * p / 100.0) as usize).min(self.latencies.len() - 1);
         self.latencies[idx]
     }
 }
@@ -141,22 +141,16 @@ async fn main() {
     .await;
     print_result("SET (1000 unique keys)", result);
 
-    let result = run_scenario(addr.clone(), c, n, |i| {
-        format!("GET key:{}", i % 1000)
-    })
-    .await;
+    let result = run_scenario(addr.clone(), c, n, |i| format!("GET key:{}", i % 1000)).await;
     print_result("GET (hit)", result);
 
-    let result = run_scenario(addr.clone(), c, n, |i| {
-        format!("GET missing:{}", i)
-    })
-    .await;
+    let result = run_scenario(addr.clone(), c, n, |i| format!("GET missing:{}", i)).await;
     print_result("GET (miss)", result);
 
     // Mixed: interleaved SET and GET on same connection
     println!("\n=== Mixed SET+GET ===");
     let build_cmd = std::sync::Arc::new(|i: usize| {
-        if i % 2 == 0 {
+        if i.is_multiple_of(2) {
             format!("SET key:{} value:{}", i % 500, i)
         } else {
             format!("GET key:{}", i % 500)
