@@ -1,67 +1,37 @@
 # agni
 
-A Redis-like in-memory cache server written in Rust.
+Agni is a Redis-like in-memory cache server written in Rust.
 
 ## Workspace
 
-| Crate | Description |
-|---|---|
-| `agni` | Core library — store, protocol, config. Publishable to crates.io |
-| `agni-server` | TCP server binary |
-| `agni-client` | CLI client binary |
-| `agni-bench` | Persistent-connection benchmarking binary |
-
-## Project Structure
-
-```
-agni/
-├── agni/                  # Core library
-│   └── src/
-│       ├── config.rs      # Server configuration
-│       ├── protocol/      # Command parsing and responses
-│       ├── store/         # In-memory key-value store
-│       └── cmd/           # Command implementations
-├── agni-server/           # Server binary
-│   └── src/
-│       ├── main.rs        # Entry point
-│       └── server/        # TCP listener and connection handling
-├── agni-client/           # CLI client binary
-│   └── src/
-│       └── main.rs        # Entry point
-└── agni-bench/            # Benchmarking binary
-    └── src/
-        └── main.rs        # Entry point
-```
+- `agni/` core library for store, protocol, and command logic
+- `agni-server/` TCP server binary
+- `agni-client/` CLI client binary
+- `agni-bench/` benchmark binary
 
 ## Getting Started
 
 ```bash
-# Run the server
 cargo run -p agni-server -- --config config.example.yml
-
-# Send a command
 cargo run -p agni-client -- PING
 ```
 
 ## Docker
 
 ```bash
-# Build
 docker build -t agni .
-
-# Run
 docker run -p 6379:6379 agni
 ```
 
-To use a custom config, mount it over the default:
+For custom config, mount a file at `/etc/agni/config.yml`. Inside the container, `host` must be `0.0.0.0`.
 
-```bash
-docker run -p 6379:6379 -v $(pwd)/config.yml:/etc/agni/config.yml agni
-```
+## Documentation
 
-> **Note:** the config `host` must be `0.0.0.0` inside the container, not `127.0.0.1`.
+- [AGENTS.md](AGENTS.md) repo conventions and agent workflow
+- [CONTRIBUTING.md](CONTRIBUTING.md) how to contribute
+- [BENCHMARK.md](BENCHMARK.md) performance methodology and results
 
-## Using agni as a library
+## Library Use
 
 ```toml
 [dependencies]
@@ -75,30 +45,10 @@ let store = Store::new();
 store.set("key".to_string(), b"value".to_vec());
 ```
 
-## Logging
-
-agni uses [`tracing`](https://docs.rs/tracing) for structured, async-aware logging. Unlike `println!`, it does not lock stdout on every call, avoiding I/O bottlenecks under high concurrency.
-
-Log level is controlled at runtime via the `RUST_LOG` environment variable:
-
-```bash
-RUST_LOG=info ./agni-server --config config.example.yml
-RUST_LOG=debug ./agni-server --config config.example.yml
-```
-
-Available levels: `error`, `warn`, `info`, `debug`, `trace`.
-If `RUST_LOG` is not set, no logs are emitted.
-
-## Store Design
-
-The in-memory store uses [`DashMap`](https://docs.rs/dashmap) — a sharded concurrent `HashMap` — instead of `Arc<RwLock<HashMap>>`. DashMap splits the keyspace across 64 independent shards, each with its own lock. Under concurrent write workloads this eliminates the single write-lock bottleneck and yields **+28% throughput and -30% p99 latency on SET** compared to a global `RwLock`.
-
-See [BENCHMARK.md](./BENCHMARK.md) for full results.
-
 ## Roadmap
 
-- [x] Core commands — `PING`, `GET`, `SET`
-- [ ] Remaining commands — `DEL`, `EXISTS`, `EXPIRE`, `TTL`
+- [x] Core commands: `PING`, `GET`, `SET`
+- [ ] Remaining commands: `DEL`, `EXISTS`, `EXPIRE`, `TTL`
 - [ ] TTL and background expiry cleanup
 - [ ] Persistence
-- [ ] Additional data types (lists, hashes, sets)
+- [ ] Additional data types: lists, hashes, sets
