@@ -43,6 +43,7 @@ Focus coverage on protocol parsing, store behavior, command execution, and clien
 ## Documentation
 
 - Update `README.md` when public usage changes.
+- Update `CHANGELOG.md` when shipped behavior changes.
 - Update `CONTRIBUTING.md` when contribution workflow changes.
 - Update `BENCHMARK.md` when benchmark methodology or results change.
 - Update `AGENTS.md` when workflow or project conventions change.

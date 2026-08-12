@@ -2,6 +2,8 @@
 
 Benchmarks comparing the two store implementations: `Arc<RwLock<HashMap>>` vs [`DashMap`](https://docs.rs/dashmap).
 
+This benchmark documents the storage decision that moved Agni to `DashMap`. Treat it as a historical comparison and reference point for future performance-sensitive changes.
+
 ## Methodology
 
 - Tool: `agni-bench` — a persistent-connection benchmarking binary in the workspace

@@ -29,6 +29,7 @@ For custom config, mount a file at `/etc/agni/config.yml`. Inside the container,
 
 - [AGENTS.md](AGENTS.md) repo conventions and agent workflow
 - [CONTRIBUTING.md](CONTRIBUTING.md) how to contribute
+- [CHANGELOG.md](CHANGELOG.md) shipped changes
 - [BENCHMARK.md](BENCHMARK.md) performance methodology and results
 
 ## Library Use
