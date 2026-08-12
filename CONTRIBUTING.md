@@ -24,13 +24,13 @@ Thanks for helping improve Agni. Keep contributions small, focused, and easy to 
 
 ## Local Checks
 
-- `cargo test`
-- `cargo fmt`
-- `cargo clippy --all-targets --all-features`
-- `cargo run -p agni-server -- --config config.example.yml`
-- `cargo run -p agni-client -- PING`
+- `make test`
+- `make fmt`
+- `make clippy`
+- `make run-server`
+- `make run-client ARGS="PING"`
 
-Use `cargo build --release -p agni-server -p agni-bench` for benchmark-related changes.
+Use `make bench-build` for benchmark-related changes.
 
 ## Tests
 

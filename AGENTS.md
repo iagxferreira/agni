@@ -14,15 +14,15 @@ Prefer moving shared logic into `agni/` and keeping binaries thin.
 
 ## Build And Test
 
-- `cargo test` runs the workspace tests.
-- `cargo fmt` formats the codebase.
-- `cargo clippy --all-targets --all-features` runs lint checks.
-- `cargo run -p agni-server -- --config config.example.yml` starts the server locally.
-- `cargo run -p agni-client -- PING` sends a command to a running server.
+- `make test` runs the workspace tests.
+- `make fmt` formats the codebase.
+- `make clippy` runs lint checks.
+- `make run-server` starts the server locally.
+- `make run-client ARGS="PING"` sends a command to a running server.
 
 Use release builds for benchmark work:
 
-- `cargo build --release -p agni-server -p agni-bench`
+- `make bench-build`
 
 ## Style And Boundaries
 

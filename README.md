@@ -32,6 +32,17 @@ For custom config, mount a file at `/etc/agni/config.yml`. Inside the container,
 - [CHANGELOG.md](CHANGELOG.md) shipped changes
 - [BENCHMARK.md](BENCHMARK.md) performance methodology and results
 
+## Development
+
+Use the `Makefile` for common local commands:
+
+```bash
+make run-server
+make run-client ARGS="PING"
+make test
+make clippy
+```
+
 ## Library Use
 
 ```toml
