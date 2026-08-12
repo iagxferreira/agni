@@ -2,6 +2,10 @@
 
 Agni is a Redis-like in-memory cache server written in Rust.
 
+## Requirements
+
+- Rust 1.97.1
+
 ## Workspace
 
 - `agni/` core library for store, protocol, and command logic
@@ -38,7 +42,7 @@ Use the `Makefile` for common local commands:
 
 ```bash
 make run-server
-make run-client ARGS="PING"
+make run-client CMD="PING"
 make test
 make clippy
 ```

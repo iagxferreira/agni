@@ -6,6 +6,7 @@ Thanks for helping improve Agni. Keep contributions small, focused, and easy to 
 
 - Read [AGENTS.md](AGENTS.md) for repo conventions and workflow.
 - Check [README.md](README.md) for the public project overview.
+- Use Rust 1.97.1.
 - Review [BENCHMARK.md](BENCHMARK.md) before changing performance-sensitive code.
 
 ## Community Expectations
@@ -28,7 +29,7 @@ Thanks for helping improve Agni. Keep contributions small, focused, and easy to 
 - `make fmt`
 - `make clippy`
 - `make run-server`
-- `make run-client ARGS="PING"`
+- `make run-client CMD="PING"`
 
 Use `make bench-build` for benchmark-related changes.
 

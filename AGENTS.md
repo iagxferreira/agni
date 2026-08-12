@@ -2,6 +2,8 @@
 
 Agni is a Rust workspace for an in-memory cache server, client, and benchmark tools. Keep changes small, testable, and scoped to the owning crate.
 
+Rust 1.97.1 is the minimum supported toolchain for the workspace.
+
 ## Project Structure
 
 - `agni/` is the core library with store, protocol, and command logic.
