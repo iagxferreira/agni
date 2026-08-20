@@ -47,3 +47,23 @@ cargo build --release -p agni-server -p agni-bench
 **HashMap wins on pure cache misses.** A miss on a read lock is extremely cheap — the lock is shared, the key lookup short-circuits fast, and there is no DashMap shard selection overhead. In practice, a well-warmed cache will have few misses, so this is a minor concern.
 
 **Conclusion:** DashMap is the better choice for a write-heavy or mixed workload cache. The only regression is in pure-miss read scenarios, which are uncommon in real usage.
+
+## Rust Baseline (pre-Kotlin migration)
+
+Captured 2026-08-19, before starting the [Kotlin rewrite](KOTLIN_MIGRATION.md). This is the reference point the Kotlin implementation will be measured against as each module (`agni-server` in particular) is ported — same methodology as above, same `agni-bench` tool, current `DashMap`-backed `agni-server` in release mode.
+
+Numbers are **not comparable to the "Results" section above** — different machine, different point in time. Only compare Kotlin runs against this section.
+
+- Machine: Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz, 28 vCPUs, Linux 7.1.8 (loopback, 127.0.0.1:6379)
+- Build: `cargo build --release -p agni-server -p agni-bench`
+- 50 concurrent connections, 10,000 ops per scenario
+
+| Scenario | Throughput (ops/sec) | p50 | p95 | p99 |
+|---|---|---|---|---|
+| PING | 507,259 | 91.8µs | 146.0µs | 171.9µs |
+| SET (1000 unique keys) | 511,495 | 91.0µs | 146.0µs | 177.2µs |
+| GET (hit) | 512,975 | 89.8µs | 148.3µs | 182.7µs |
+| GET (miss) | 511,302 | 90.5µs | 145.6µs | 177.4µs |
+| Mixed SET+GET | 502,559 | — | — | — |
+
+When `agni-server` lands in Kotlin, re-run this exact command on the same machine and append a comparison table here rather than replacing this section.

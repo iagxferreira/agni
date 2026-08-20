@@ -114,10 +114,11 @@ comparable.
   that).
 - Integration test: spin up `agni-server`, hit it with `agni-client` for a
   PING/GET/SET round trip.
-- Run `agni-bench` against the Kotlin server, compare p50/p95/p99 and
-  throughput against the numbers already in `BENCHMARK.md`. Flag any
-  material regression vs Tokio — that's the main technical risk of this
-  rewrite.
+- Run `agni-bench` against the Kotlin server on the same machine, compare
+  p50/p95/p99 and throughput against the ["Rust Baseline (pre-Kotlin
+  migration)"](BENCHMARK.md#rust-baseline-pre-kotlin-migration) section of
+  `BENCHMARK.md`, and append the comparison there. Flag any material
+  regression vs Tokio — that's the main technical risk of this rewrite.
 
 ## 5. Docs to update once the rewrite lands
 
