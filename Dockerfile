@@ -1,44 +1,33 @@
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM rust:1-slim-bookworm AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+# Copy the Gradle wrapper and build files first, to cache dependency downloads
+COPY gradlew build.gradle.kts settings.gradle.kts ./
+COPY gradle gradle
+COPY agni-core/build.gradle.kts agni-core/build.gradle.kts
+COPY agni-server/build.gradle.kts agni-server/build.gradle.kts
+COPY agni-client/build.gradle.kts agni-client/build.gradle.kts
+COPY agni-bench/build.gradle.kts agni-bench/build.gradle.kts
 
-# Copy workspace manifests first to cache dependency compilation
-COPY Cargo.toml Cargo.lock ./
-COPY agni/Cargo.toml agni/Cargo.toml
-COPY agni-server/Cargo.toml agni-server/Cargo.toml
-COPY agni-client/Cargo.toml agni-client/Cargo.toml
-COPY agni-bench/Cargo.toml agni-bench/Cargo.toml
+# Warm the dependency cache. No source is present yet, so this just resolves
+# and downloads jars; whether the (sourceless) build itself succeeds doesn't
+# matter here.
+RUN ./gradlew --no-daemon :agni-server:installDist || true
 
-# Create dummy lib/main files so cargo can compile dependencies
-RUN mkdir -p agni/src agni-server/src agni-client/src agni-bench/src \
-    && echo "pub fn placeholder() {}" > agni/src/lib.rs \
-    && echo "fn main() {}" > agni-server/src/main.rs \
-    && echo "fn main() {}" > agni-client/src/main.rs \
-    && echo "fn main() {}" > agni-bench/src/main.rs
-
-RUN cargo build --release -p agni-server
-
-# Copy real source and rebuild only agni-server
-COPY agni/src agni/src
+# Copy real source and build the server distribution
+COPY agni-core/src agni-core/src
 COPY agni-server/src agni-server/src
 
-RUN touch agni/src/lib.rs agni-server/src/main.rs \
-    && cargo build --release -p agni-server
+RUN ./gradlew --no-daemon :agni-server:installDist
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
-FROM debian:bookworm-slim
+FROM eclipse-temurin:21-jre-alpine
 
-WORKDIR /app
-
-COPY --from=builder /app/target/release/agni-server /usr/local/bin/agni-server
+COPY --from=builder /app/agni-server/build/install/agni-server /opt/agni-server
 COPY config.docker.yml /etc/agni/config.yml
 
 EXPOSE 6379
 
-ENTRYPOINT ["agni-server", "--config", "/etc/agni/config.yml"]
+ENTRYPOINT ["/opt/agni-server/bin/agni-server", "--config", "/etc/agni/config.yml"]

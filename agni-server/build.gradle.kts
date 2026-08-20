@@ -29,3 +29,11 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+// The application plugin defaults the run task's working directory to this
+// module's directory, but `--config config.example.yml` (like Makefile's
+// run-server target, and Cargo's equivalent working-directory behavior)
+// expects to resolve relative paths from the repo root.
+tasks.named<JavaExec>("run") {
+    workingDir = rootProject.projectDir
+}
