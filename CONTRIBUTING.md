@@ -6,7 +6,7 @@ Thanks for helping improve Agni. Keep contributions small, focused, and easy to 
 
 - Read [AGENTS.md](AGENTS.md) for repo conventions and workflow.
 - Check [README.md](README.md) for the public project overview.
-- Use Rust 1.97.1.
+- Use JDK 21.
 - Review [BENCHMARK.md](BENCHMARK.md) before changing performance-sensitive code.
 
 ## Community Expectations
@@ -19,15 +19,14 @@ Thanks for helping improve Agni. Keep contributions small, focused, and easy to 
 ## Working Style
 
 - Prefer one change per commit.
-- Keep shared logic in `agni/` and keep binaries thin.
+- Keep shared logic in `agni-core/` and keep binaries thin.
 - Preserve the boundary between protocol, storage, client, and server code.
 - Keep documentation changes separate from code changes when possible.
 
 ## Local Checks
 
 - `make test`
-- `make fmt`
-- `make clippy`
+- `make check`
 - `make run-server`
 - `make run-client CMD="PING"`
 
@@ -35,8 +34,8 @@ Use `make bench-build` for benchmark-related changes.
 
 ## Tests
 
-- Add `#[test]` for synchronous logic and `#[tokio::test]` for async code.
-- Name tests by behavior, for example `set_overwrites_existing_value`.
+- Add JUnit5 `@Test`s for synchronous logic; for coroutine code doing real I/O, use `runBlocking` rather than `kotlinx-coroutines-test`'s `runTest` (see `AGENTS.md`).
+- Name tests by behavior, for example `` `set overwrites existing value`() ``.
 - Add coverage for protocol parsing, store behavior, and command execution.
 
 ## Pull Requests
