@@ -1,14 +1,14 @@
 # agni
 
-Agni is a Redis-like in-memory cache server written in Rust.
+Agni is a Redis-like in-memory cache server written in Kotlin.
 
 ## Requirements
 
-- Rust 1.97.1
+- JDK 21
 
 ## Workspace
 
-- `agni/` core library for store, protocol, and command logic
+- `agni-core/` core library for store, protocol, and command logic
 - `agni-server/` TCP server binary
 - `agni-client/` CLI client binary
 - `agni-bench/` benchmark binary
@@ -16,8 +16,8 @@ Agni is a Redis-like in-memory cache server written in Rust.
 ## Getting Started
 
 ```bash
-cargo run -p agni-server -- --config config.example.yml
-cargo run -p agni-client -- PING
+./gradlew :agni-server:run --args="--config config.example.yml"
+./gradlew :agni-client:run --args="PING"
 ```
 
 ## Docker
@@ -45,21 +45,22 @@ Use the `Makefile` for common local commands:
 make run-server
 make run-client CMD="PING"
 make test
-make clippy
+make check
 ```
 
 ## Library Use
 
-```toml
-[dependencies]
-agni = "0.1"
+```kotlin
+dependencies {
+    implementation("dev.agni:agni-core:0.1.0")
+}
 ```
 
-```rust
-use agni::store::Store;
+```kotlin
+import dev.agni.core.store.Store
 
-let store = Store::new();
-store.set("key".to_string(), b"value".to_vec());
+val store = Store()
+store.set("key", "value".toByteArray())
 ```
 
 ## Roadmap

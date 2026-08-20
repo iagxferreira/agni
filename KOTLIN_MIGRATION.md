@@ -122,12 +122,17 @@ comparable.
 
 ## 5. Docs to update once the rewrite lands
 
-- `README.md` — Rust 1.97.1 requirement → JDK version, `cargo run` examples
-  → `./gradlew run` examples.
-- `AGENTS.md` — style section: 4-space/snake_case Rust conventions → Kotlin
-  conventions (ktlint), build/test commands.
-- `CONTRIBUTING.md` — toolchain setup instructions.
-- `CHANGELOG.md` — entry for the rewrite once merged.
+- [x] `README.md` — Rust 1.97.1 requirement → JDK version, `cargo run`
+  examples → `./gradlew run` examples.
+- [x] `AGENTS.md` — style section: 4-space/snake_case Rust conventions →
+  Kotlin conventions, build/test commands. (ktlint/detekt aren't actually
+  wired into the build yet, so the doc says so explicitly rather than
+  claiming a formatter/linter that doesn't exist.)
+- [x] `CONTRIBUTING.md` — toolchain setup instructions.
+- [ ] `CHANGELOG.md` — entry for the rewrite once merged. Still open — the
+  migration itself (Rust fully removed as of #9) is arguably a
+  user-facing, shippable change worth its own entry, separate from this
+  docs pass.
 
 ## 6. Native compilation
 
