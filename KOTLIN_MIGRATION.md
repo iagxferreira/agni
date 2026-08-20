@@ -15,6 +15,9 @@ living plan: update it as decisions change or phases complete.
   Kotlin module reaches parity, then the corresponding crate is deleted.
 - **Workflow:** each phase below lands as its own worktree branch and PR,
   reviewed and merged before the next phase starts.
+- **Native compilation:** GraalVM native-image for `agni-client` and
+  `agni-bench` only, not `agni-server`. See [Native compilation](#6-native-compilation)
+  for the reasoning.
 
 ## 0. Project scaffolding
 
@@ -124,3 +127,34 @@ comparable.
   conventions (ktlint), build/test commands.
 - `CONTRIBUTING.md` — toolchain setup instructions.
 - `CHANGELOG.md` — entry for the rewrite once merged.
+
+## 6. Native compilation
+
+Rust gives us this today for free: a single static-ish binary, near-instant
+startup, and a tiny memory footprint. Plain JVM/Kotlin loses all three (JRE
+dependency, ~100–300ms startup, tens of MB baseline RAM). GraalVM
+native-image (via the `org.graalvm.buildtools.native` Gradle plugin) can
+recover most of that, but it isn't a clear win everywhere in this workspace —
+apply it selectively:
+
+- **`agni-client` and `agni-bench` — yes.** Both are short-lived CLI
+  invocations where startup latency *is* the user experience. This is where
+  Rust's instant-start behavior matters most and where native-image pays for
+  itself directly.
+- **`agni-server` — no, stay on the regular JVM.** It's a long-running
+  daemon; JIT warm-up eventually outperforms native-image on steady-state
+  throughput, and Ktor + Jackson + coroutines under native-image means
+  dealing with reflection/reachability-metadata configuration for a benefit
+  (fast cold start) the server doesn't need. Revisit only if a concrete
+  requirement shows up (e.g. serverless/scale-to-zero deployment).
+
+Practical notes for when `agni-client`/`agni-bench` are ported:
+
+- Add the `org.graalvm.buildtools.native` plugin to those two modules only.
+- Run the native-image tracing agent against the existing test suites /
+  representative CLI invocations to generate reflection configs for clikt
+  and any serialization touched by those binaries.
+- Add a `make bench-build`-equivalent target (e.g. `./gradlew nativeCompile`)
+  and confirm the resulting binaries still round-trip against `agni-server`
+  before treating this as done — same wire format, so no server-side changes
+  are needed to support it.
