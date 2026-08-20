@@ -1,39 +1,31 @@
 SHELL := /bin/sh
 
-.PHONY: help run-server run-client check test fmt clippy build-release bench-build
+.PHONY: help run-server run-client check test build bench-build
 
 help:
 	@printf '%s\n' \
 		'agni targets:' \
-		'  make run-server    - run the TCP server with config.example.yml' \
-		'  make run-client    - run the CLI client, pass CMD="PING"' \
-		'  make check         - type-check the workspace' \
-		'  make test          - run the workspace tests' \
-		'  make fmt           - format the codebase' \
-		'  make clippy        - run clippy on all targets' \
-		'  make build-release - build the workspace in release mode' \
-		'  make bench-build   - build the server and bench binaries in release mode'
+		'  make run-server  - run the TCP server with config.example.yml' \
+		'  make run-client  - run the CLI client, pass CMD="PING"' \
+		'  make check       - compile the workspace without running tests' \
+		'  make test        - run the workspace tests' \
+		'  make build       - build the full workspace' \
+		'  make bench-build - build the server and bench distributions'
 
 run-server:
-	cargo run -p agni-server -- --config config.example.yml
+	./gradlew :agni-server:run --args="--config config.example.yml"
 
 run-client:
-	cargo run -p agni-client -- $(CMD)
+	./gradlew :agni-client:run --args="$(CMD)"
 
 check:
-	cargo check
+	./gradlew classes testClasses
 
 test:
-	cargo test
+	./gradlew test
 
-fmt:
-	cargo fmt
-
-clippy:
-	cargo clippy --all-targets --all-features
-
-build-release:
-	cargo build --release
+build:
+	./gradlew build
 
 bench-build:
-	cargo build --release -p agni-server -p agni-bench
+	./gradlew :agni-server:installDist :agni-bench:installDist
