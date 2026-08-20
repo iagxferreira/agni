@@ -35,6 +35,7 @@ For custom config, mount a file at `/etc/agni/config.yml`. Inside the container,
 - [CONTRIBUTING.md](CONTRIBUTING.md) how to contribute
 - [CHANGELOG.md](CHANGELOG.md) shipped changes
 - [BENCHMARK.md](BENCHMARK.md) performance methodology and results
+- [KOTLIN_MIGRATION.md](KOTLIN_MIGRATION.md) plan for the Kotlin rewrite
 
 ## Development
 
