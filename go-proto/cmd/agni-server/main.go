@@ -8,8 +8,10 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"time"
 
+	"agni-go/internal/config"
 	"agni-go/internal/protocol"
 	"agni-go/internal/store"
 	"agni-go/internal/wire"
@@ -18,12 +20,20 @@ import (
 const version = "0.1.0"
 
 func main() {
-	host := flag.String("host", "127.0.0.1", "listen host")
-	port := flag.Int("port", 6379, "listen port")
+	configPath := flag.String("config", "", "path to the YAML configuration file")
 	flag.Parse()
 
-	addr := net.JoinHostPort(*host, fmt.Sprint(*port))
-	ln, err := net.Listen("tcp", addr)
+	cfg := config.Default()
+	if *configPath != "" {
+		loaded, err := config.FromFile(*configPath)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		cfg = loaded
+	}
+
+	ln, err := net.Listen("tcp", cfg.Addr())
 	if err != nil {
 		log.Fatalf("listen: %v", err)
 	}
@@ -31,9 +41,9 @@ func main() {
 
 	st := store.New()
 	startedAt := time.Now()
-	log.Printf("server started service=agni host=%s port=%d version=%s", *host, *port, version)
+	log.Printf("server started service=agni host=%s port=%d version=%s", cfg.Host, cfg.Port, version)
 
-	serve(ln, st, *host, *port, startedAt)
+	serve(ln, st, cfg.Host, cfg.Port, startedAt)
 }
 
 // serve runs the accept loop until the listener is closed.
