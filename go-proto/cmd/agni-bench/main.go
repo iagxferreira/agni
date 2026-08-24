@@ -24,6 +24,9 @@ func (r benchResult) opsPerSec() float64 {
 }
 
 func (r benchResult) percentile(p float64) time.Duration {
+	if len(r.latencies) == 0 {
+		return 0
+	}
 	sorted := append([]time.Duration(nil), r.latencies...)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
 	idx := int(float64(len(sorted)) * p / 100.0)
@@ -109,12 +112,30 @@ func printResult(label string, r benchResult) {
 	fmt.Printf("  Latency p99:  %s\n", r.percentile(99))
 }
 
+// validateFlags rejects inputs that would otherwise crash runScenario:
+// concurrency <= 0 divides by zero computing opsPerTask, and ops < concurrency
+// leaves opsPerTask at 0, producing an empty latencies slice.
+func validateFlags(concurrency, ops int) error {
+	if concurrency <= 0 {
+		return fmt.Errorf("concurrency (-c %d) must be positive", concurrency)
+	}
+	if ops < concurrency {
+		return fmt.Errorf("ops (-n %d) must be >= concurrency (-c %d)", ops, concurrency)
+	}
+	return nil
+}
+
 func main() {
 	host := flag.String("host", "127.0.0.1", "server host")
 	port := flag.Int("port", 6379, "server port")
 	concurrency := flag.Int("c", 50, "number of concurrent connections")
 	ops := flag.Int("n", 10000, "total number of operations per scenario")
 	flag.Parse()
+
+	if err := validateFlags(*concurrency, *ops); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	fmt.Println("=== Agni Bench (Go) ===")
 	fmt.Printf("  Target:       %s:%d\n", *host, *port)
