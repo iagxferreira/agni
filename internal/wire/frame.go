@@ -6,9 +6,8 @@ import (
 	"io"
 )
 
-// MaxFrameLength matches tokio_util's LengthDelimitedCodec default (and the
-// Kotlin server's MAX_FRAME_LENGTH), so a corrupt/hostile length prefix
-// can't force an unbounded allocation.
+// MaxFrameLength caps a single frame at 8MiB, so a corrupt/hostile length
+// prefix can't force an unbounded allocation.
 const MaxFrameLength = 8 * 1024 * 1024
 
 // ReadFrame reads a 4-byte big-endian length prefix followed by that many

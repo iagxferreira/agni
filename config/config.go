@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config mirrors agni-core's Config: same two fields and defaults.
+// Config holds the two server settings: host and port.
 type Config struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
@@ -21,8 +21,9 @@ func (c Config) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
-// FromFile mirrors Config.fromFile: a distinct error class for IO vs parse
-// failure, since the caller (agni-server's CLI) reports them differently.
+// FromFile loads and parses a YAML config file. Distinct IOError/ParseError
+// types let the caller (agni-server's CLI) report read vs. parse failures
+// differently.
 func FromFile(path string) (Config, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {

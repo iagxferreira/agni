@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"agni-go/internal/wire"
+	"github.com/iagxferreira/agni/internal/wire"
 )
 
 func main() {

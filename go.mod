@@ -1,4 +1,4 @@
-module agni-go
+module github.com/iagxferreira/agni
 
 go 1.27.0
 

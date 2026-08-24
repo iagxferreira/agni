@@ -11,10 +11,10 @@ import (
 	"os"
 	"time"
 
-	"agni-go/internal/config"
-	"agni-go/internal/protocol"
-	"agni-go/internal/store"
-	"agni-go/internal/wire"
+	"github.com/iagxferreira/agni/config"
+	"github.com/iagxferreira/agni/internal/wire"
+	"github.com/iagxferreira/agni/protocol"
+	"github.com/iagxferreira/agni/store"
 )
 
 const version = "0.1.0"

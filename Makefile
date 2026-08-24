@@ -4,7 +4,7 @@ SHELL := /bin/sh
 
 help:
 	@printf '%s\n' \
-		'go-proto targets:' \
+		'agni targets:' \
 		'  make run-server   - run the TCP server with config.example.yml' \
 		'  make run-client   - run the CLI client, pass CMD="PING"' \
 		'  make check        - vet and build without running tests' \
@@ -38,4 +38,4 @@ bench-build:
 	go build -o bin/agni-bench ./cmd/agni-bench
 
 docker-build:
-	docker build -t agni-go -f Dockerfile .
+	docker build -t agni -f Dockerfile .

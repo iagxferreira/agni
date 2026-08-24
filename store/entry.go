@@ -6,9 +6,9 @@ import (
 	"fmt"
 )
 
-// Entry mirrors agni-core's Entry: an id, key, and value. encoding/json
-// base64-encodes []byte fields by default, so ToJSON needs no custom
-// serializer to match the Kotlin/Rust wire format for getAsJson.
+// Entry is an id, key, and value. encoding/json base64-encodes []byte
+// fields by default, so ToJSON needs no custom serializer to produce a
+// base64-encoded value in the JSON it returns.
 type Entry struct {
 	ID    string `json:"id"`
 	Key   string `json:"key"`

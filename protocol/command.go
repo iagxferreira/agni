@@ -12,8 +12,8 @@ const (
 	Unknown
 )
 
-// Command mirrors agni-core's sealed Command class as a tagged struct:
-// Key/Value/Message are only populated for the variants that use them.
+// Command is a tagged union of the supported wire commands: Key/Value/
+// Message are only populated for the variants that use them.
 type Command struct {
 	Kind    CommandKind
 	Key     string
@@ -21,8 +21,8 @@ type Command struct {
 	Message string
 }
 
-// ParseCommand mirrors the Rust/Kotlin parser: split on the first two
-// spaces only, so a SET value can contain spaces of its own.
+// ParseCommand splits on the first two spaces only, so a SET value can
+// contain spaces of its own.
 func ParseCommand(data []byte) Command {
 	parts := strings.SplitN(string(data), " ", 3)
 	name := strings.ToUpper(parts[0])

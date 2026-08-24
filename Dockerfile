@@ -9,12 +9,15 @@ RUN go mod download
 
 COPY cmd cmd
 COPY internal internal
+COPY store store
+COPY protocol protocol
+COPY config config
 
 RUN CGO_ENABLED=0 go build -o /out/agni-server ./cmd/agni-server
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
 # A statically-linked Go binary needs nothing from userspace, so scratch is
-# enough — no JRE (or even alpine) required, unlike the Kotlin image.
+# enough — no JRE or OS packages required.
 FROM scratch
 
 COPY --from=builder /out/agni-server /agni-server

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"agni-go/internal/protocol"
-	"agni-go/internal/store"
-	"agni-go/internal/wire"
+	"github.com/iagxferreira/agni/internal/wire"
+	"github.com/iagxferreira/agni/protocol"
+	"github.com/iagxferreira/agni/store"
 )
 
 func TestDispatch(t *testing.T) {

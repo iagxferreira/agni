@@ -2,11 +2,10 @@ package store
 
 import "sync"
 
-// Store is the Go equivalent of agni-core's Store: same five operations,
-// backed by a plain mutex-guarded map. This mirrors the original
-// HashMap+RwLock Rust design (see BENCHMARK.md) rather than the sharded
-// DashMap it was later replaced with — a starting point, not a final answer
-// on contention.
+// Store is a mutex-guarded map with five operations: set, get, delete, and
+// getAsJson. This mirrors the original HashMap+RwLock design (see
+// BENCHMARK.md) rather than the sharded DashMap it was later replaced with
+// — a starting point, not a final answer on contention.
 type Store struct {
 	mu   sync.RWMutex
 	data map[string]Entry

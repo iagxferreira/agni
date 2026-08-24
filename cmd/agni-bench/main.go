@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"agni-go/internal/wire"
+	"github.com/iagxferreira/agni/internal/wire"
 )
 
 type benchResult struct {
@@ -47,8 +47,8 @@ func sendRecv(r *bufio.Reader, w *bufio.Writer, cmd string) error {
 	return err
 }
 
-// runScenario mirrors BenchRunner.kt: each worker holds a persistent TCP
-// connection and sends requests sequentially, no reconnects per operation.
+// runScenario: each worker holds a persistent TCP connection and sends
+// requests sequentially, no reconnects per operation.
 func runScenario(host string, port int, concurrency, ops int, buildCmd func(int) string) (benchResult, error) {
 	opsPerTask := ops / concurrency
 	start := time.Now()
