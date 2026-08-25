@@ -1,8 +1,14 @@
 # Benchmarks
 
-Benchmarks comparing the two store implementations: `Arc<RwLock<HashMap>>` vs [`DashMap`](https://docs.rs/dashmap).
+Agni treats benchmarking as part of the product story, not an afterthought. This document tracks the measurement methodology and the results that compare the major language implementations preserved in the repo history.
 
-This benchmark documents the storage decision that moved Agni to `DashMap`. Treat it as a historical comparison and reference point for future performance-sensitive changes.
+The important takeaway is not just the numbers, but the shape of the comparisons:
+
+- the Rust line on `main` is the current reference implementation
+- `go-main` preserves the Go baseline
+- `kotlin-main` preserves the Kotlin benchmark snapshot
+
+Use this file as the source of truth for benchmark methodology, results, and interpretation. Append new measurement sets instead of replacing older ones so the performance story stays auditable over time.
 
 ## Methodology
 
@@ -18,6 +24,10 @@ cargo build --release -p agni-server -p agni-bench
 ./target/release/agni-server --config config.yml
 ./target/release/agni-bench -c 50 -n 10000
 ```
+
+## Historical Comparison
+
+The earliest Rust baseline compared `Arc<RwLock<HashMap>>` with [`DashMap`](https://docs.rs/dashmap). That experiment helped validate the storage choice for the Rust line and is kept here as part of the project’s evolution.
 
 ## Results
 
@@ -42,8 +52,8 @@ cargo build --release -p agni-server -p agni-bench
 
 ## Analysis
 
-**DashMap wins on writes.** With 50 concurrent connections contending on 1,000 shared keys, `HashMap+RwLock` serializes all writes through a single lock. DashMap shards across 64 buckets, reducing contention by ~64x. The result: **+28.5% throughput and -30% p99 latency on SET**.
+**DashMap wins on writes.** With 50 concurrent connections contending on 1,000 shared keys, `HashMap+RwLock` serializes all writes through a single lock. DashMap shards across 64 buckets, reducing contention by roughly the same factor. The result is materially better throughput and tail latency on SET.
 
 **HashMap wins on pure cache misses.** A miss on a read lock is extremely cheap — the lock is shared, the key lookup short-circuits fast, and there is no DashMap shard selection overhead. In practice, a well-warmed cache will have few misses, so this is a minor concern.
 
-**Conclusion:** DashMap is the better choice for a write-heavy or mixed workload cache. The only regression is in pure-miss read scenarios, which are uncommon in real usage.
+**Conclusion:** `DashMap` is the better choice for a write-heavy or mixed workload cache. The remaining miss-only regression is a trade-off the project accepts in exchange for better concurrent behavior on the common path.

@@ -4,6 +4,14 @@ Agni is a Rust workspace for an in-memory cache server, client, and benchmark to
 
 Rust 1.97.1 is the minimum supported toolchain for the workspace.
 
+## Branch Layout
+
+- `main` tracks the Rust implementation and is the default place for current development and benchmark work.
+- `go-main` preserves the Go baseline for comparison and history.
+- `kotlin-main` preserves the Kotlin benchmark snapshot for comparison and history.
+
+Treat the non-`main` branches as frozen reference points unless a change explicitly says otherwise.
+
 ## Project Structure
 
 - `agni/` is the core library with store, protocol, and command logic.
