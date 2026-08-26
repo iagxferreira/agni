@@ -4,13 +4,19 @@ Agni is a Rust workspace for an in-memory cache server, client, and benchmark to
 
 Rust 1.97.1 is the minimum supported toolchain for the workspace.
 
-## Branch Layout
+## History Layout
+
+`main` is the only branch. It carries the project's full lineage, so a single
+clone contains every implementation:
 
 - `main` tracks the Rust implementation and is the default place for current development and benchmark work.
-- `go-main` preserves the Go baseline for comparison and history.
-- `kotlin-main` preserves the Kotlin benchmark snapshot for comparison and history.
+- tag `snapshot/go` marks the Go baseline for comparison and history.
+- tag `snapshot/kotlin` marks the Kotlin benchmark snapshot for comparison and history.
+- tag `snapshot/rust-pre-merge` marks the Rust tree as it stood before the histories were consolidated.
 
-Treat the non-`main` branches as frozen reference points unless a change explicitly says otherwise.
+Treat the tagged snapshots as frozen reference points. Check one out with
+`git checkout snapshot/go` to inspect that language's tree; do not branch from
+them unless a change explicitly says otherwise.
 
 ## Project Structure
 
@@ -28,7 +34,7 @@ Prefer moving shared logic into `agni/` and keeping binaries thin.
 - `make fmt` formats the codebase.
 - `make clippy` runs lint checks.
 - `make run-server` starts the server locally.
-- `make run-client ARGS="PING"` sends a command to a running server.
+- `make run-client CMD="PING"` sends a command to a running server.
 
 Use release builds for benchmark work:
 

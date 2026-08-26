@@ -5,14 +5,14 @@ Agni treats benchmarking as part of the product story, not an afterthought. This
 The important takeaway is not just the numbers, but the shape of the comparisons:
 
 - the Rust line on `main` is the current reference implementation
-- `go-main` preserves the Go baseline
-- `kotlin-main` preserves the Kotlin benchmark snapshot
+- tag `snapshot/go` marks the Go baseline
+- tag `snapshot/kotlin` marks the Kotlin benchmark snapshot
 
 Use this file as the source of truth for benchmark methodology, results, and interpretation. Append new measurement sets instead of replacing older ones so the performance story stays auditable over time.
 
 ## Go vs Rust Snapshot
 
-Captured on 2026-08-25 on local loopback (`127.0.0.1:6379`) with 50 concurrent connections and 10,000 operations per scenario. The Go run used `go-main` through `mise x go@1.27.0`, and the Rust run used the release binaries from `main`. Both used the same persistent-connection workload shape.
+Captured on 2026-08-25 on local loopback (`127.0.0.1:6379`) with 50 concurrent connections and 10,000 operations per scenario. The Go run used the tree now tagged `snapshot/go` through `mise x go@1.27.0`, and the Rust run used the release binaries from `main`. Both used the same persistent-connection workload shape.
 
 ### Throughput (ops/sec)
 
@@ -48,7 +48,7 @@ Rust leads this snapshot across every measured scenario, especially on writes an
 
 ```bash
 cargo build --release -p agni-server -p agni-bench
-./target/release/agni-server --config config.yml
+./target/release/agni-server --config config.example.yml
 ./target/release/agni-bench -c 50 -n 10000
 ```
 
