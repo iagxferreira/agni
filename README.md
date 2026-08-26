@@ -7,11 +7,14 @@ The goal is twofold:
 1. build a small but serious in-memory cache server with clear operational boundaries
 2. use the same project shape to compare Rust, Go, and Kotlin as implementation choices
 
-The repository keeps that history intact:
+The repository keeps that history intact. Every implementation lives in `main`'s
+own history rather than on separate branches, so a single clone carries all of it:
 
 - `main` tracks the Rust implementation and the current benchmark-focused line
-- `go-main` preserves the Go baseline
-- `kotlin-main` preserves the Kotlin benchmark snapshot
+- the Go implementation is preserved at tag `snapshot/go`
+- the Kotlin implementation is preserved at tag `snapshot/kotlin`
+
+Check either out with `git checkout snapshot/go` to get that language's full tree.
 
 That makes the project useful both as a cache server and as a portfolio piece for showing how the same workload behaves across languages, runtimes, and trade-offs.
 
