@@ -1,3 +1,0 @@
-[workspace]
-members = ["agni", "agni-server", "agni-client", "agni-bench"]
-resolver = "2"
