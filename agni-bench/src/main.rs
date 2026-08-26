@@ -38,6 +38,9 @@ impl BenchResult {
     }
 
     fn percentile(&mut self, p: f64) -> Duration {
+        if self.latencies.is_empty() {
+            return Duration::ZERO;
+        }
         self.latencies.sort();
         let idx =
             ((self.latencies.len() as f64 * p / 100.0) as usize).min(self.latencies.len() - 1);
@@ -117,9 +120,30 @@ fn print_result(label: &str, mut result: BenchResult) {
     println!("  Latency p99:  {:?}", result.percentile(99.0));
 }
 
+/// Rejects inputs that would otherwise crash `run_scenario`: a concurrency of 0
+/// divides by zero computing `ops_per_task`, and `ops < concurrency` truncates
+/// `ops_per_task` to 0, leaving an empty latency set for `percentile`.
+fn validate_flags(concurrency: usize, ops: usize) -> Result<(), String> {
+    if concurrency == 0 {
+        return Err("concurrency (-c) must be greater than 0".to_string());
+    }
+    if ops < concurrency {
+        return Err(format!(
+            "ops (-n {ops}) must be >= concurrency (-c {concurrency})"
+        ));
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
+
+    if let Err(err) = validate_flags(cli.concurrency, cli.ops) {
+        eprintln!("error: {err}");
+        std::process::exit(1);
+    }
+
     let addr = format!("{}:{}", cli.host, cli.port);
     let c = cli.concurrency;
     let n = cli.ops;
@@ -162,4 +186,68 @@ async fn main() {
     println!("  Throughput:   {:.0} ops/sec", result.ops_per_sec());
 
     println!("\nDone.");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn result_from(millis: &[u64]) -> BenchResult {
+        BenchResult {
+            total_ops: millis.len(),
+            elapsed: Duration::from_secs(1),
+            latencies: millis.iter().map(|m| Duration::from_millis(*m)).collect(),
+        }
+    }
+
+    // Regression: an empty latency set used to underflow `len() - 1` on usize
+    // and panic. Reachable whenever ops < concurrency truncated ops_per_task to 0.
+    #[test]
+    fn percentile_of_empty_result_is_zero() {
+        let mut result = result_from(&[]);
+        assert_eq!(result.percentile(50.0), Duration::ZERO);
+        assert_eq!(result.percentile(99.0), Duration::ZERO);
+    }
+
+    #[test]
+    fn percentile_of_single_sample_is_that_sample() {
+        let mut result = result_from(&[7]);
+        assert_eq!(result.percentile(50.0), Duration::from_millis(7));
+        assert_eq!(result.percentile(99.0), Duration::from_millis(7));
+    }
+
+    #[test]
+    fn percentile_sorts_before_indexing() {
+        let mut result = result_from(&[50, 10, 40, 20, 30]);
+        assert_eq!(result.percentile(0.0), Duration::from_millis(10));
+        assert_eq!(result.percentile(50.0), Duration::from_millis(30));
+    }
+
+    #[test]
+    fn percentile_never_indexes_past_the_end() {
+        let mut result = result_from(&[1, 2, 3, 4]);
+        assert_eq!(result.percentile(100.0), Duration::from_millis(4));
+    }
+
+    #[test]
+    fn validate_flags_rejects_zero_concurrency() {
+        let err = validate_flags(0, 10_000).unwrap_err();
+        assert!(err.contains("concurrency"), "unexpected message: {err}");
+    }
+
+    #[test]
+    fn validate_flags_rejects_ops_below_concurrency() {
+        let err = validate_flags(50, 10).unwrap_err();
+        assert!(err.contains("ops"), "unexpected message: {err}");
+    }
+
+    #[test]
+    fn validate_flags_accepts_ops_equal_to_concurrency() {
+        assert!(validate_flags(50, 50).is_ok());
+    }
+
+    #[test]
+    fn validate_flags_accepts_defaults() {
+        assert!(validate_flags(50, 10_000).is_ok());
+    }
 }
