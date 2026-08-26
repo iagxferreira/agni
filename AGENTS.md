@@ -1,47 +1,52 @@
 # Repository Guidelines
 
-Agni is a Kotlin/Gradle workspace for an in-memory cache server, client, and benchmark tools. Keep changes small, testable, and scoped to the owning module.
+Agni is a Rust workspace for an in-memory cache server, client, and benchmark tools. Keep changes small, testable, and scoped to the owning crate.
 
-JDK 21 is the minimum supported toolchain for the workspace (pinned via `jvmToolchain(21)` in each module; Gradle auto-provisions it if it isn't installed locally).
+Rust 1.97.1 is the minimum supported toolchain for the workspace.
+
+## Branch Layout
+
+- `main` tracks the Rust implementation and is the default place for current development and benchmark work.
+- `go-main` preserves the Go baseline for comparison and history.
+- `kotlin-main` preserves the Kotlin benchmark snapshot for comparison and history.
+
+Treat the non-`main` branches as frozen reference points unless a change explicitly says otherwise.
 
 ## Project Structure
 
-- `agni-core/` is the core library with store, protocol, and config logic.
+- `agni/` is the core library with store, protocol, and command logic.
 - `agni-server/` is the TCP server binary.
 - `agni-client/` is the CLI client binary.
 - `agni-bench/` is the benchmarking binary.
 - `README.md` stays high level. `BENCHMARK.md` records performance results.
 
-Prefer moving shared logic into `agni-core/` and keeping binaries thin.
+Prefer moving shared logic into `agni/` and keeping binaries thin.
 
 ## Build And Test
 
 - `make test` runs the workspace tests.
-- `make check` compiles the workspace without running tests.
+- `make fmt` formats the codebase.
+- `make clippy` runs lint checks.
 - `make run-server` starts the server locally.
-- `make run-client CMD="PING"` sends a command to a running server.
+- `make run-client ARGS="PING"` sends a command to a running server.
 
-Use distributions for benchmark work:
+Use release builds for benchmark work:
 
 - `make bench-build`
 
-No formatter or linter (ktlint/detekt) is wired into the build yet — don't reference `make fmt`/`make clippy`-style targets until one is actually added.
-
 ## Style And Boundaries
 
-Use standard Kotlin formatting: 4-space indentation, `camelCase` for functions and properties, `PascalCase` for types, and `UPPER_SNAKE_CASE` for constants. Prefer explicit, testable functions over shared mutable state.
+Use standard Rust formatting: 4-space indentation, `snake_case` for functions and modules, `PascalCase` for types, and `UPPER_SNAKE_CASE` for constants. Prefer explicit, testable functions over shared mutable state.
 
 Keep boundaries clear:
 
 - the server handles networking and I/O
 - the client handles CLI input and output
-- the core module (`agni-core`) owns cache behavior and protocol types
+- the core crate owns cache behavior and protocol types
 
 ## Testing
 
-Use JUnit5 `@Test` for synchronous logic. Name tests by behavior, using backtick-quoted names, such as `` `set overwrites existing value`() ``.
-
-For coroutine code that does real I/O (sockets, file access), prefer plain `runBlocking` over `kotlinx-coroutines-test`'s `runTest`: mixing `runTest`'s virtual-time scheduler with real work launched on `Dispatchers.IO` causes spurious instant timeouts, since the scheduler auto-advances virtual time when it doesn't see pending work on it. See `agni-server`'s `ServerTest` for the pattern.
+Use `#[test]` for synchronous logic and `#[tokio::test]` for async code. Name tests by behavior, such as `set_overwrites_existing_value`.
 
 Focus coverage on protocol parsing, store behavior, command execution, and client/server integration points.
 
