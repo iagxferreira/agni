@@ -10,3 +10,6 @@ tokio-util.workspace = true
 futures.workspace = true
 bytes.workspace = true
 clap.workspace = true
+
+[lints]
+workspace = true
