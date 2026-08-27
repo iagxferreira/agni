@@ -11,7 +11,7 @@ rust-version = "1.97.1"
 agni = { path = "agni" }
 
 # async runtime and wire plumbing, shared by all three binaries
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["net", "rt-multi-thread", "macros"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 futures = "0.3"
 bytes = "1"
