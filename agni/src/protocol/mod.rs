@@ -9,30 +9,44 @@ pub enum Command {
 
 impl Command {
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        let input = String::from_utf8_lossy(bytes);
-        let mut parts = input.splitn(3, ' ');
+        let mut parts = bytes.splitn(3, |b| *b == b' ');
+        let verb = parts.next().unwrap_or_default().to_ascii_uppercase();
 
-        let command = parts.next().unwrap_or("").to_uppercase();
-
-        match command.as_str() {
-            "PING" => Command::Ping,
-            "HEALTHCHECK" => Command::Healthcheck,
-            "GET" => match parts.next() {
-                Some(key) => Command::Get {
-                    key: key.trim().to_string(),
+        match verb.as_slice() {
+            b"PING" => Command::Ping,
+            b"HEALTHCHECK" => Command::Healthcheck,
+            b"GET" => match parts.next() {
+                Some(key) => match parse_key(key) {
+                    Some(key) => Command::Get { key },
+                    None => Command::Unknown("GET key must be valid UTF-8".to_string()),
                 },
                 None => Command::Unknown("GET requires a key".to_string()),
             },
-            "SET" => match (parts.next(), parts.next()) {
-                (Some(key), Some(value)) => Command::Set {
-                    key: key.trim().to_string(),
-                    value: value.trim().as_bytes().to_vec(),
+            b"SET" => match (parts.next(), parts.next()) {
+                (Some(key), Some(value)) => match parse_key(key) {
+                    // The value is kept as raw bytes: the store holds Vec<u8>
+                    // and the framing is length-delimited, so nothing on the
+                    // path requires it to be text.
+                    Some(key) => Command::Set {
+                        key,
+                        value: value.trim_ascii().to_vec(),
+                    },
+                    None => Command::Unknown("SET key must be valid UTF-8".to_string()),
                 },
                 _ => Command::Unknown("SET requires a key and value".to_string()),
             },
-            _ => Command::Unknown(command),
+            _ => Command::Unknown(String::from_utf8_lossy(&verb).into_owned()),
         }
     }
+}
+
+/// Keys must be UTF-8 because both `Command` and the store type them as
+/// `String`. Returning None lets the caller report that explicitly instead of
+/// silently substituting replacement characters.
+fn parse_key(bytes: &[u8]) -> Option<String> {
+    std::str::from_utf8(bytes.trim_ascii())
+        .ok()
+        .map(str::to_string)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -128,15 +142,37 @@ mod tests {
     }
 
     #[test]
-    fn non_utf8_set_values_are_currently_corrupted() {
-        // 0xff/0xfe/0x80 are not valid UTF-8; from_utf8_lossy replaces each
-        // with U+FFFD (ef bf bd), so 5 bytes in become 11 bytes out.
+    fn non_utf8_set_values_round_trip_unchanged() {
+        // 0xff/0xfe/0x80 are not valid UTF-8. These used to be replaced with
+        // U+FFFD, turning 5 bytes into 11 and silently corrupting the write.
+        let raw = b"\xff\xfe\x00A\x80";
         let cmd = Command::from_bytes(b"SET k \xff\xfe\x00A\x80");
+        let Command::Set { key, value } = cmd else {
+            panic!("expected a SET");
+        };
+        assert_eq!(key, "k");
+        assert_eq!(value, raw.to_vec());
+    }
+
+    #[test]
+    fn non_utf8_keys_are_rejected_rather_than_corrupted() {
+        assert_eq!(
+            Command::from_bytes(b"GET \xff\xfe"),
+            Command::Unknown("GET key must be valid UTF-8".to_string())
+        );
+        assert_eq!(
+            Command::from_bytes(b"SET \xff\xfe v"),
+            Command::Unknown("SET key must be valid UTF-8".to_string())
+        );
+    }
+
+    #[test]
+    fn set_value_preserves_interior_bytes_exactly() {
+        let cmd = Command::from_bytes(b"SET k a\x00b");
         let Command::Set { value, .. } = cmd else {
             panic!("expected a SET");
         };
-        assert_ne!(value, b"\xff\xfe\x00A\x80".to_vec());
-        assert_eq!(value, b"\xef\xbf\xbd\xef\xbf\xbd\x00A\xef\xbf\xbd".to_vec());
+        assert_eq!(value, b"a\x00b".to_vec());
     }
 
     #[test]
