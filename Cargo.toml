@@ -1,3 +1,30 @@
 [workspace]
 members = ["agni", "agni-server", "agni-client", "agni-bench"]
 resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.97.1"
+
+[workspace.dependencies]
+agni = { path = "agni" }
+
+# async runtime and wire plumbing, shared by all three binaries
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+futures = "0.3"
+bytes = "1"
+clap = { version = "4", features = ["derive"] }
+
+# tracing: the server enables env-filter on top of this
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# core crate only
+uuid = { version = "1", features = ["v4", "serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+base64 = "0.22"
+dashmap = "6"
