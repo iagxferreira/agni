@@ -5,14 +5,14 @@ Agni treats benchmarking as part of the product story, not an afterthought. This
 The important takeaway is not just the numbers, but the shape of the comparisons:
 
 - the Rust line on `main` is the current reference implementation
-- `go-main` preserves the Go baseline
-- `kotlin-main` preserves the Kotlin benchmark snapshot
+- tag `snapshot/go` marks the Go baseline
+- tag `snapshot/kotlin` marks the Kotlin benchmark snapshot
 
 Use this file as the source of truth for benchmark methodology, results, and interpretation. Append new measurement sets instead of replacing older ones so the performance story stays auditable over time.
 
 ## Go vs Rust Snapshot
 
-Captured on 2026-08-25 on local loopback (`127.0.0.1:6379`) with 50 concurrent connections and 10,000 operations per scenario. The Go run used `go-main` through `mise x go@1.27.0`, and the Rust run used the release binaries from `main`. Both used the same persistent-connection workload shape.
+Captured on 2026-08-25 on local loopback (`127.0.0.1:6379`) with 50 concurrent connections and 10,000 operations per scenario. The Go run used the tree now tagged `snapshot/go` through `mise x go@1.27.0`, and the Rust run used the release binaries from `main`. Both used the same persistent-connection workload shape.
 
 ### Throughput (ops/sec)
 
@@ -48,7 +48,7 @@ Rust leads this snapshot across every measured scenario, especially on writes an
 
 ```bash
 cargo build --release -p agni-server -p agni-bench
-./target/release/agni-server --config config.yml
+./target/release/agni-server --config config.example.yml
 ./target/release/agni-bench -c 50 -n 10000
 ```
 
@@ -84,3 +84,43 @@ The earliest Rust baseline compared `Arc<RwLock<HashMap>>` with [`DashMap`](http
 **HashMap wins on pure cache misses.** A miss on a read lock is extremely cheap — the lock is shared, the key lookup short-circuits fast, and there is no DashMap shard selection overhead. In practice, a well-warmed cache will have few misses, so this is a minor concern.
 
 **Conclusion:** `DashMap` is the better choice for a write-heavy or mixed workload cache. The remaining miss-only regression is a trade-off the project accepts in exchange for better concurrent behavior on the common path.
+
+## Byte-Based Parser (2026-08-26)
+
+`Command::from_bytes` stopped running frames through `String::from_utf8_lossy`
+and now splits the byte slice directly, so binary values survive a round trip.
+Because that sits directly in the per-command hot path, it was measured before
+and after.
+
+Methodology as above (release build, loopback, `-c 50 -n 10000`), with one
+change: runs were **interleaved A/B/A/B**, four of each. A first attempt ran
+all four "after" runs and then all four "before" runs, and produced an
+apparent 3–9% improvement that was entirely an artefact of machine drift
+during the batch. Interleaving cancels it.
+
+### Throughput (ops/sec), mean of 4 interleaved runs
+
+| Scenario | Before | After | Delta |
+|---|---|---|---|
+| PING | 509,369 | 508,917 | -0.1% |
+| SET (1000 unique keys) | 509,407 | 503,486 | -1.2% |
+| GET (hit) | 502,970 | 514,026 | +2.2% |
+| GET (miss) | 507,911 | 505,337 | -0.5% |
+| Mixed SET+GET | 504,208 | 505,171 | +0.2% |
+
+**Conclusion: no measurable difference.** Run-to-run spread was 4.9% (before)
+and 6.2% (after), so every delta above sits inside the noise floor, and the
+sign flips between scenarios rather than pointing one way. The correctness fix
+is free at this workload.
+
+These numbers are not comparable to the Go vs Rust snapshot further up: that
+was captured on a different day and this machine's absolute throughput has
+since moved. Only the before/after pair here should be compared to each other.
+
+### Divergence from the frozen snapshots
+
+As of this change, the Rust line accepts non-UTF-8 values and returns them
+byte-for-byte. `snapshot/go` and `snapshot/kotlin` still corrupt them, so the
+three implementations no longer agree on binary input. This does not affect
+benchmark comparability: every `agni-bench` scenario sends ASCII, so the
+measured workload is unchanged.

@@ -87,9 +87,12 @@ make clippy
 
 ## Library Use
 
+The `agni` name on crates.io belongs to an unrelated project, so this crate is
+not published there. Depend on it by git:
+
 ```toml
 [dependencies]
-agni = "0.1"
+agni = { git = "https://github.com/iagxferreira/agni" }
 ```
 
 ```rust
