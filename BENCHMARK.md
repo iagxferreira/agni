@@ -84,3 +84,43 @@ The earliest Rust baseline compared `Arc<RwLock<HashMap>>` with [`DashMap`](http
 **HashMap wins on pure cache misses.** A miss on a read lock is extremely cheap — the lock is shared, the key lookup short-circuits fast, and there is no DashMap shard selection overhead. In practice, a well-warmed cache will have few misses, so this is a minor concern.
 
 **Conclusion:** `DashMap` is the better choice for a write-heavy or mixed workload cache. The remaining miss-only regression is a trade-off the project accepts in exchange for better concurrent behavior on the common path.
+
+## Byte-Based Parser (2026-08-26)
+
+`Command::from_bytes` stopped running frames through `String::from_utf8_lossy`
+and now splits the byte slice directly, so binary values survive a round trip.
+Because that sits directly in the per-command hot path, it was measured before
+and after.
+
+Methodology as above (release build, loopback, `-c 50 -n 10000`), with one
+change: runs were **interleaved A/B/A/B**, four of each. A first attempt ran
+all four "after" runs and then all four "before" runs, and produced an
+apparent 3–9% improvement that was entirely an artefact of machine drift
+during the batch. Interleaving cancels it.
+
+### Throughput (ops/sec), mean of 4 interleaved runs
+
+| Scenario | Before | After | Delta |
+|---|---|---|---|
+| PING | 509,369 | 508,917 | -0.1% |
+| SET (1000 unique keys) | 509,407 | 503,486 | -1.2% |
+| GET (hit) | 502,970 | 514,026 | +2.2% |
+| GET (miss) | 507,911 | 505,337 | -0.5% |
+| Mixed SET+GET | 504,208 | 505,171 | +0.2% |
+
+**Conclusion: no measurable difference.** Run-to-run spread was 4.9% (before)
+and 6.2% (after), so every delta above sits inside the noise floor, and the
+sign flips between scenarios rather than pointing one way. The correctness fix
+is free at this workload.
+
+These numbers are not comparable to the Go vs Rust snapshot further up: that
+was captured on a different day and this machine's absolute throughput has
+since moved. Only the before/after pair here should be compared to each other.
+
+### Divergence from the frozen snapshots
+
+As of this change, the Rust line accepts non-UTF-8 values and returns them
+byte-for-byte. `snapshot/go` and `snapshot/kotlin` still corrupt them, so the
+three implementations no longer agree on binary input. This does not affect
+benchmark comparability: every `agni-bench` scenario sends ASCII, so the
+measured workload is unchanged.
